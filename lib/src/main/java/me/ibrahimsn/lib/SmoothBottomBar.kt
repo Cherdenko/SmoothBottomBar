@@ -38,6 +38,31 @@ class SmoothBottomBar @JvmOverloads constructor(
     private var currentIconTint = itemIconTintActive
 
     private var indicatorLocation = barSideMargins
+    private var _iconBackgroundColor: Int = Color.TRANSPARENT
+    private val iconBackgroundPaint = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.FILL
+        color = _iconBackgroundColor
+    }
+    // New padding backing (in PX)
+    @Dimension
+    private var _iconBackgroundPadding: Float = context.d2p(DEFAULT_ICON_BG_PADDING)
+
+    // Public accessors
+    var iconBackgroundColor: Int
+        @ColorInt get() = _iconBackgroundColor
+        set(@ColorInt value) {
+            _iconBackgroundColor = value
+            iconBackgroundPaint.color = value
+            invalidate()
+        }
+
+    var iconBackgroundPadding: Float
+        @Dimension get() = _iconBackgroundPadding
+        set(@Dimension value) {
+            _iconBackgroundPadding = value
+            invalidate()
+        }
 
     private val rect = RectF()
 
@@ -58,7 +83,7 @@ class SmoothBottomBar @JvmOverloads constructor(
 
     @Dimension
     private var _barCornerRadius = context.d2p(DEFAULT_BAR_CORNER_RADIUS)
-    
+
     private var _barCorners = DEFAULT_BAR_CORNERS
 
     @Dimension
@@ -95,10 +120,10 @@ class SmoothBottomBar @JvmOverloads constructor(
 
     private var _itemActiveIndex: Int = 0
 
-    lateinit var menu:Menu
+    lateinit var menu: Menu
 
 
-    private val badge_arr=HashSet<Int>()
+    private val badge_arr = HashSet<Int>()
 
     // Core Attributes
     var barBackgroundColor: Int
@@ -161,12 +186,12 @@ class SmoothBottomBar @JvmOverloads constructor(
             invalidate()
         }
     var itemBadgeColor: Int
-            @ColorInt get() = _itemBadgeColor
-            set(@ColorInt value) {
-                _itemBadgeColor = value
-                badgePaint.color = value
-                invalidate()
-            }
+        @ColorInt get() = _itemBadgeColor
+        set(@ColorInt value) {
+            _itemBadgeColor = value
+            badgePaint.color = value
+            invalidate()
+        }
 
     var itemPadding: Float
         @Dimension get() = _itemPadding
@@ -277,7 +302,7 @@ class SmoothBottomBar @JvmOverloads constructor(
         isFakeBoldText = true
     }
 
-    private var exploreByTouchHelper : AccessibleExploreByTouchHelper
+    private var exploreByTouchHelper: AccessibleExploreByTouchHelper
 
     init {
         obtainStyledAttributes(attrs, defStyleAttr)
@@ -295,6 +320,14 @@ class SmoothBottomBar @JvmOverloads constructor(
         )
 
         try {
+            iconBackgroundColor = typedArray.getColor(
+                R.styleable.SmoothBottomBar_iconBackgroundColor,
+                iconBackgroundColor
+            )
+            iconBackgroundPadding = typedArray.getDimension(
+                R.styleable.SmoothBottomBar_iconBackgroundPadding,
+                iconBackgroundPadding
+            )
             barBackgroundColor = typedArray.getColor(
                 R.styleable.SmoothBottomBar_backgroundColor,
                 barBackgroundColor
@@ -408,25 +441,24 @@ class SmoothBottomBar @JvmOverloads constructor(
     }
 
     @JvmName("setBadge")
-    fun setBadge(pos:Int){
+    fun setBadge(pos: Int) {
         badge_arr.add(pos)
         invalidate()
     }
+
     @JvmName("removeBadge")
-    fun removeBadge(pos:Int){
+    fun removeBadge(pos: Int) {
         badge_arr.remove(pos)
         invalidate()
     }
-    @JvmName("getMenu")
-    fun  getMenu  () : Menu {
-        return menu
-    }
+
+
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         // Draw background
-        if (barCornerRadius > 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (barCornerRadius > 0) {
             canvas.drawRoundRect(
                 0f, 0f,
                 width.toFloat(),
@@ -440,26 +472,34 @@ class SmoothBottomBar @JvmOverloads constructor(
 
                 if ((barCorners and TOP_LEFT_CORNER) != TOP_LEFT_CORNER) {
                     // Draw a box to cover the curve on the top left
-                    canvas.drawRect(0f, 0f, width.toFloat() / 2,
-                        height.toFloat() / 2, paintBackground)
+                    canvas.drawRect(
+                        0f, 0f, width.toFloat() / 2,
+                        height.toFloat() / 2, paintBackground
+                    )
                 }
 
                 if ((barCorners and TOP_RIGHT_CORNER) != TOP_RIGHT_CORNER) {
                     // Draw a box to cover the curve on the top right
-                    canvas.drawRect(width.toFloat() / 2, 0f, width.toFloat(),
-                        height.toFloat() / 2, paintBackground)
+                    canvas.drawRect(
+                        width.toFloat() / 2, 0f, width.toFloat(),
+                        height.toFloat() / 2, paintBackground
+                    )
                 }
 
                 if ((barCorners and BOTTOM_LEFT_CORNER) != BOTTOM_LEFT_CORNER) {
                     // Draw a box to cover the curve on the bottom left
-                    canvas.drawRect(0f, height.toFloat() / 2, width.toFloat() / 2,
-                        height.toFloat(), paintBackground)
+                    canvas.drawRect(
+                        0f, height.toFloat() / 2, width.toFloat() / 2,
+                        height.toFloat(), paintBackground
+                    )
                 }
 
                 if ((barCorners and BOTTOM_RIGHT_CORNER) != BOTTOM_RIGHT_CORNER) {
                     // Draw a box to cover the curve on the bottom right
-                    canvas.drawRect(width.toFloat() / 2, height.toFloat() / 2, width.toFloat(),
-                        height.toFloat(), paintBackground)
+                    canvas.drawRect(
+                        width.toFloat() / 2, height.toFloat() / 2, width.toFloat(),
+                        height.toFloat(), paintBackground
+                    )
                 }
 
             }
@@ -502,7 +542,9 @@ class SmoothBottomBar @JvmOverloads constructor(
                         .toInt() + itemIconSize.toInt() / 2 + ((textLength / 2) * (1 - (OPAQUE - item.alpha) / OPAQUE.toFloat())).toInt(),
                     height / 2 + itemIconSize.toInt() / 2
                 )
-
+                if (index != itemActiveIndex) {
+                    drawIconBackground(item, index, canvas)
+                }
                 tintAndDrawIcon(item, index, canvas)
 
                 paintText.alpha = item.alpha
@@ -527,7 +569,7 @@ class SmoothBottomBar @JvmOverloads constructor(
                     height / 2 + itemIconSize.toInt() / 2
                 )
                 //set badge indicator
-                if(badge_arr.contains(index)){
+                if (badge_arr.contains(index)) {
                     canvas.drawCircle(
                         item.rect.centerX()
                             .toInt() - itemIconSize.toInt() / 2f - ((textLength / 2) * (1 - (OPAQUE - item.alpha) / OPAQUE)),
@@ -536,7 +578,9 @@ class SmoothBottomBar @JvmOverloads constructor(
                         badgePaint
                     )
                 }
-
+                if (index != itemActiveIndex) {
+                    drawIconBackground(item, index, canvas)
+                }
                 tintAndDrawIcon(item, index, canvas)
 
                 paintText.alpha = item.alpha
@@ -548,7 +592,28 @@ class SmoothBottomBar @JvmOverloads constructor(
             }
         }
     }
+    // New: draw icon background behind non-active icons
 
+    private fun drawIconBackground(
+        item: BottomBarItem,
+        index: Int,
+        canvas: Canvas
+    ) {
+        // Skip if not requested
+        if (iconBackgroundColor == Color.TRANSPARENT) return
+
+        val cx = item.rect.centerX()
+        val cy = height / 2f
+        val half = itemIconSize / 2f
+
+        val left = cx - half - _iconBackgroundPadding
+        val top = cy - half - _iconBackgroundPadding
+        val right = cx + half + _iconBackgroundPadding
+        val bottom = cy + half + _iconBackgroundPadding
+        val radius = half + _iconBackgroundPadding
+
+        canvas.drawRoundRect(RectF(left, top, right, bottom), radius, radius, iconBackgroundPaint)
+    }
     private fun tintAndDrawIcon(
         item: BottomBarItem,
         index: Int,
@@ -567,10 +632,11 @@ class SmoothBottomBar @JvmOverloads constructor(
      */
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        when(event?.action){
+        when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
                 return true
             }
+
             MotionEvent.ACTION_UP -> {
                 for ((i, item) in items.withIndex()) {
                     if (item.rect.contains(event.x, event.y)) {
@@ -587,7 +653,7 @@ class SmoothBottomBar @JvmOverloads constructor(
         return exploreByTouchHelper.dispatchHoverEvent(event) || super.dispatchHoverEvent(event)
     }
 
-    private fun onClickAction(viewId : Int){
+    private fun onClickAction(viewId: Int) {
         exploreByTouchHelper.invalidateVirtualView(viewId)
         if (viewId != itemActiveIndex) {
             itemActiveIndex = viewId
@@ -647,20 +713,20 @@ class SmoothBottomBar @JvmOverloads constructor(
         }
     }
 
-    fun setupWithNavController(menu:Menu,navController: NavController) {
+    fun setupWithNavController(menu: Menu, navController: NavController) {
         NavigationComponentHelper.setupWithNavController(menu, this, navController)
     }
 
     fun setupWithNavController(navController: NavController) {
         NavigationComponentHelper.setupWithNavController(this.menu, this, navController)
-        Navigation.setViewNavController(this,navController)
+        Navigation.setViewNavController(this, navController)
     }
 
-    fun setSelectedItem(pos:Int){
-        try{
-            this.itemActiveIndex=pos
+    fun setSelectedItem(pos: Int) {
+        try {
+            this.itemActiveIndex = pos
             NavigationUI.onNavDestinationSelected(this.menu.getItem(pos), this.findNavController())
-        }catch (e:Exception){
+        } catch (e: Exception) {
             throw Exception("set menu using PopupMenu")
         }
     }
@@ -706,6 +772,7 @@ class SmoothBottomBar @JvmOverloads constructor(
         private const val INVALID_RES = -1
         private const val DEFAULT_INDICATOR_COLOR = "#2DFFFFFF"
         private const val DEFAULT_TINT = "#C8FFFFFF"
+        private const val DEFAULT_ICON_BG_PADDING = 6f
 
         // corner flags
         private const val NO_CORNERS = 0;
