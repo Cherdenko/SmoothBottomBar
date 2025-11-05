@@ -406,12 +406,12 @@ class SmoothBottomBar @JvmOverloads constructor(
         applyItemActiveIndex()
     }
 
-
+    @JvmName("setBadge")
     fun setBadge(pos:Int){
         badge_arr.add(pos)
         invalidate()
     }
-
+    @JvmName("removeBadge")
     fun removeBadge(pos:Int){
         badge_arr.remove(pos)
         invalidate()
