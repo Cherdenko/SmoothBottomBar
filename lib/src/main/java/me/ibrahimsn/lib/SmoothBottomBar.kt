@@ -97,6 +97,7 @@ class SmoothBottomBar @JvmOverloads constructor(
 
     lateinit var menu:Menu
 
+
     private val badge_arr=HashSet<Int>()
 
     // Core Attributes
@@ -415,6 +416,10 @@ class SmoothBottomBar @JvmOverloads constructor(
     fun removeBadge(pos:Int){
         badge_arr.remove(pos)
         invalidate()
+    }
+    @JvmName("getMenu")
+    fun  getMenu  () : Menu {
+        return menu
     }
 
     override fun onDraw(canvas: Canvas) {
