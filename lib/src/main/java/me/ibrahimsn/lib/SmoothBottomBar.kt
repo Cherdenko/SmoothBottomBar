@@ -569,6 +569,11 @@ class SmoothBottomBar @JvmOverloads constructor(
                     height / 2 + itemIconSize.toInt() / 2
                 )
                 //set badge indicator
+
+                if (index != itemActiveIndex) {
+                    drawIconBackground(item, index, canvas)
+                }
+                tintAndDrawIcon(item, index, canvas)
                 if (badge_arr.contains(index)) {
                     canvas.drawCircle(
                         item.rect.centerX()
@@ -578,11 +583,6 @@ class SmoothBottomBar @JvmOverloads constructor(
                         badgePaint
                     )
                 }
-                if (index != itemActiveIndex) {
-                    drawIconBackground(item, index, canvas)
-                }
-                tintAndDrawIcon(item, index, canvas)
-
                 paintText.alpha = item.alpha
                 canvas.drawText(
                     item.title,
